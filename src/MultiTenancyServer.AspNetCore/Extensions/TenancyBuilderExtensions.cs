@@ -63,11 +63,11 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="parsers">Collection of parsers to add the <see cref="HostParser"/> to.</param>
         /// <param name="parentHostSuffix">The parent hostname suffix which will contain the tenant's canonical name as its only sub-domain hostname of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddHostParserForParent(this ICollection<IRequestParser> parsers, string parentHostSuffix)
+        public static ICollection<IRequestParser> AddSubdomainParser(this ICollection<IRequestParser> parsers, string parentHostSuffix)
         {
             ArgCheck.NotNull(nameof(parsers), parsers);
             ArgCheck.NotNullOrEmpty(nameof(parentHostSuffix), parentHostSuffix);
-            parsers.AddHostParser($@"^([a-z0-9-]+){Regex.Escape(parentHostSuffix).Replace(@"\*", @"[a-z0-9-]+")}$");
+            parsers.AddHostnameParser($@"^([a-z0-9-]+){Regex.Escape(parentHostSuffix).Replace(@"\*", @"[a-z0-9-]+")}$");
             return parsers;
         }
 
@@ -80,7 +80,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="parsers">Collection of parsers to add the <see cref="HostParser"/> to.</param>
         /// <param name="hostPattern">A regular expression to retreive the tenant canonical name from the full hostname (domain) of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddHostParser(this ICollection<IRequestParser> parsers, string hostPattern)
+        public static ICollection<IRequestParser> AddHostnameParser(this ICollection<IRequestParser> parsers, string hostPattern)
         {
             ArgCheck.NotNull(nameof(parsers), parsers);
             ArgCheck.NotNullOrEmpty(nameof(hostPattern), hostPattern);
@@ -93,9 +93,9 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Eg: use "/tenants/" for matching on multitenancyserver.io/tenants/tenant1
         /// </summary>
         /// <param name="parsers">Collection of parsers to add the <see cref="PathParser"/> to.</param>
-        /// <param name="parentHostSuffix">The parent path prefix which will contain the tenant's canonical name as its child path segment of the request.</param>
+        /// <param name="parentPathPrefix">The parent path prefix which will contain the tenant's canonical name as its child path segment of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddPathParserForParent(this ICollection<IRequestParser> parsers, string parentPathPrefix)
+        public static ICollection<IRequestParser> AddChildPathParser(this ICollection<IRequestParser> parsers, string parentPathPrefix)
         {
             ArgCheck.NotNull(nameof(parsers), parsers);
             ArgCheck.NotNullOrEmpty(nameof(parentPathPrefix), parentPathPrefix);
@@ -123,13 +123,29 @@ namespace Microsoft.Extensions.DependencyInjection
         /// Eg: use "tenant" for matching on ?tenant=tenant1
         /// </summary>
         /// <param name="parsers">Collection of parsers to add the <see cref="QueryParser"/> to.</param>
-        /// <param name="headerName">The query string parameter name of the tenant canonical name.</param>
+        /// <param name="queryName">The query string parameter name of the tenant canonical name.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static ICollection<IRequestParser> AddQueryParser(this ICollection<IRequestParser> parsers, string queryName)
         {
             ArgCheck.NotNull(nameof(parsers), parsers);
             ArgCheck.NotNullOrEmpty(nameof(queryName), queryName);
             parsers.Add(new QueryParser() { QueryName = queryName });
+            return parsers;
+        }
+
+        /// <summary>
+        /// Adds a <see cref="UserClaimParser"/> to the collection of parsers for detecting the current tenant's canonical name
+        /// from a user claim on the authenticated user principal.
+        /// Eg: claim type "http://schemas.microsoft.com/identity/claims/tenantid" or "tid".
+        /// </summary>
+        /// <param name="parsers">Collection of parsers to add the <see cref="UserClaimParser"/> to.</param>
+        /// <param name="claimType">Claim type that contains the tenant canonical name as its value.</param>
+        /// <returns><paramref name="parsers"/> for fluent API.</returns>
+        public static ICollection<IRequestParser> AddClaimParser(this ICollection<IRequestParser> parsers, string claimType)
+        {
+            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNullOrEmpty(nameof(claimType), claimType);
+            parsers.Add(new UserClaimParser() { ClaimType = claimType });
             return parsers;
         }
     }

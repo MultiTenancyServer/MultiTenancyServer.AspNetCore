@@ -27,12 +27,6 @@ namespace MultiTenancyServer.Http.Parsers
         public string ClaimType { get; set; } = "http://schemas.microsoft.com/identity/claims/tenantid";
 
         /// <summary>
-        /// An alternative or shorthand claim type of the claim to look for in the current user.
-        /// Eg: "tid"
-        /// </summary>
-        public string ShortClaimType { get; set; } = "tid";
-
-        /// <summary>
         /// Retrieves the value of the <see cref="ClaimType"/> claim from the current user.
         /// </summary>
         /// <param name="httpContext">The request to retrieve the user claim from.</param>
@@ -41,8 +35,7 @@ namespace MultiTenancyServer.Http.Parsers
         {
             return httpContext?.User?.Claims?.OfType<Claim>()
                 .Where(c => (Issuer == null || string.Equals(c.Issuer, Issuer, StringComparison.OrdinalIgnoreCase)) &&
-                    ((ClaimType != null && string.Equals(c.Type, ClaimType, StringComparison.OrdinalIgnoreCase)) ||
-                    (ShortClaimType != null && string.Equals(c.Type, ShortClaimType, StringComparison.OrdinalIgnoreCase))))
+                    (ClaimType != null && string.Equals(c.Type, ClaimType, StringComparison.OrdinalIgnoreCase)))
                 .FirstOrDefault()?.Value;
         }
     }
