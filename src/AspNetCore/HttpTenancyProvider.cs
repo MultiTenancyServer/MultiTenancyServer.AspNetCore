@@ -17,15 +17,15 @@ namespace MultiTenancyServer.Http
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpTenancyProvider"/> class.
         /// </summary>
-        /// <param name="httpContext">Context of the current HTTP request.</param>
+        /// <param name="httpContextAccessor">Context accessor of the current HTTP request.</param>
         /// <param name="tenantRequestParser">Parses the tenant from the current request.</param>
         /// <param name="logger">The logger.</param>
-        public HttpTenancyProvider(HttpContext httpContext, ITenancyRequestParser<TTenant> tenantRequestParser, ILogger<HttpTenancyProvider<TTenant>> logger)
+        public HttpTenancyProvider(IHttpContextAccessor httpContextAccessor, ITenancyRequestParser<TTenant> tenantRequestParser, ILogger<HttpTenancyProvider<TTenant>> logger)
         {
-            ArgCheck.NotNull(nameof(httpContext), httpContext);
+            ArgCheck.NotNull(nameof(httpContextAccessor), httpContextAccessor);
             ArgCheck.NotNull(nameof(tenantRequestParser), tenantRequestParser);
             ArgCheck.NotNull(nameof(logger), logger);
-            _httpContext = httpContext;
+            _httpContext = httpContextAccessor.HttpContext;
             _tenantRequestParser = tenantRequestParser;
             _logger = logger;
         }
