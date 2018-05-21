@@ -41,7 +41,6 @@ namespace Microsoft.Extensions.DependencyInjection
             where TKey : IEquatable<TKey>
         {
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.TryAddScoped<ITenancyRequestParser<TTenant>, TenancyRequestParser<TTenant>>();
             services.TryAddScoped<ITenancyProvider<TTenant>, HttpTenancyProvider<TTenant>>();
             return services.AddMultiTenancyCore<TTenant, TKey>(setup);
         }
