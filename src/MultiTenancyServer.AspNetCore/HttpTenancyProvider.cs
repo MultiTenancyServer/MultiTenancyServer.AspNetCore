@@ -33,15 +33,22 @@ namespace MultiTenancyServer.Http
         private readonly HttpContext _httpContext;
         private readonly ITenancyRequestParser<TTenant> _tenantRequestParser;
         private readonly ILogger _logger;
+        private bool _tenantLoaded;
+        private TTenant _tenant;
 
         /// <summary>
         /// Gets the tenant from the current HTTP request.
         /// </summary>
         /// <param name="httpContext">Current HTTP context for the request.</param>
         /// <returns>The tenant the request is for, otherwise null if undeterministic or not found.</returns>
-        public Task<TTenant> GetCurrentTenantAsync(CancellationToken cancellationToken = default)
+        public async Task<TTenant> GetCurrentTenantAsync(CancellationToken cancellationToken = default)
         {
-            return _tenantRequestParser.GetTenantFromRequestAsync(_httpContext, _httpContext.RequestAborted);
+            if (!_tenantLoaded)
+            {
+                _tenant = await _tenantRequestParser.GetTenantFromRequestAsync(_httpContext, _httpContext.RequestAborted).ConfigureAwait(false);
+                _tenantLoaded = true;
+            }
+            return _tenant;
         }
     }
 }
