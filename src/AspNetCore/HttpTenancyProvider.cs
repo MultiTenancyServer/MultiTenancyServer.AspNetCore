@@ -27,7 +27,12 @@ namespace MultiTenancyServer.Http
         /// <param name="tenantStore">The tenant store.</param>
         /// <param name="lookupNormalizer">The lookup normalizer for string comparison.</param>
         /// <param name="logger">The logger.</param>
-        public HttpTenancyProvider(IHttpContextAccessor httpContextAccessor, IEnumerable<IRequestParser> requestParsers, ITenantStore<TTenant> tenantStore, ILookupNormalizer lookupNormalizer, ILogger<HttpTenancyProvider<TTenant>> logger)
+        public HttpTenancyProvider(
+            IHttpContextAccessor httpContextAccessor, 
+            IEnumerable<IRequestParser> requestParsers, 
+            ITenantStore<TTenant> tenantStore, 
+            ILookupNormalizer lookupNormalizer, 
+            ILogger<HttpTenancyProvider<TTenant>> logger)
         {
             ArgCheck.NotNull(nameof(httpContextAccessor), httpContextAccessor);
             ArgCheck.NotNull(nameof(requestParsers), requestParsers);
