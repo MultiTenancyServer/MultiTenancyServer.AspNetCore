@@ -28,10 +28,10 @@ namespace MultiTenancyServer.Http
         /// <param name="lookupNormalizer">The lookup normalizer for string comparison.</param>
         /// <param name="logger">The logger.</param>
         public HttpTenancyProvider(
-            IHttpContextAccessor httpContextAccessor, 
-            IEnumerable<IRequestParser> requestParsers, 
-            ITenantStore<TTenant> tenantStore, 
-            ILookupNormalizer lookupNormalizer, 
+            IHttpContextAccessor httpContextAccessor,
+            IEnumerable<IRequestParser> requestParsers,
+            ITenantStore<TTenant> tenantStore,
+            ILookupNormalizer lookupNormalizer,
             ILogger<HttpTenancyProvider<TTenant>> logger)
         {
             ArgCheck.NotNull(nameof(httpContextAccessor), httpContextAccessor);
@@ -40,29 +40,20 @@ namespace MultiTenancyServer.Http
             ArgCheck.NotNull(nameof(lookupNormalizer), lookupNormalizer);
             ArgCheck.NotNull(nameof(logger), logger);
 
-            _httpContext = httpContextAccessor.HttpContext;
+            _httpContextAccessor = httpContextAccessor;
             _requestParsers = requestParsers;
             _tenantStore = tenantStore;
             _lookupNormalizer = lookupNormalizer;
             _logger = logger;
         }
 
-        private readonly HttpContext _httpContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IEnumerable<IRequestParser> _requestParsers;
         private readonly ITenantStore<TTenant> _tenantStore;
         private readonly ILookupNormalizer _lookupNormalizer;
         private readonly ILogger _logger;
         private bool _tenantLoaded;
         private TTenant _tenant;
-
-        /// <summary>
-        /// Gets the tenant from the current HTTP request.
-        /// </summary>
-        /// <returns>The tenant the request is for, otherwise null if undeterministic or not found.</returns>
-        public TTenant GetCurrentTenant()
-        {
-            return GetCurrentTenantAsync().GetAwaiter().GetResult();
-        }
 
         /// <summary>
         /// Gets the tenant from the current HTTP request asynchronously.
@@ -72,9 +63,16 @@ namespace MultiTenancyServer.Http
         {
             if (!_tenantLoaded)
             {
+                var httpContext = _httpContextAccessor.HttpContext;
+                if (httpContext == null)
+                {
+                    _logger.LogError($"{nameof(IHttpContextAccessor)}.{nameof(IHttpContextAccessor.HttpContext)} is not available yet, it may be too early in the request pipeline to access it.");
+                    return default;
+                }
+
                 foreach (var parser in _requestParsers)
                 {
-                    var canonicalName = parser.ParseRequest(_httpContext);
+                    var canonicalName = parser.ParseRequest(httpContext);
                     if (canonicalName != null)
                     {
                         var normalizedCanonicalName = _lookupNormalizer.Normalize(canonicalName);
@@ -85,7 +83,7 @@ namespace MultiTenancyServer.Http
                             {
                                 var tenantId = await _tenantStore.GetTenantIdAsync(tenant, cancellationToken).ConfigureAwait(false);
                                 _logger.LogDebug("Tenant {TenantId} found by {Parser} for value {CanonicalName} in request {HttpRequest}.",
-                                    tenantId, parser.GetType().Name, canonicalName, _httpContext.Request.GetDisplayUrl());
+                                    tenantId, parser.GetType().Name, canonicalName, httpContext.Request.GetDisplayUrl());
                             }
                             _tenant = tenant;
                             break;
@@ -93,13 +91,13 @@ namespace MultiTenancyServer.Http
                         else if (_logger.IsEnabled(LogLevel.Debug))
                         {
                             _logger.LogDebug("Tenant not found by {Parser} for value {CanonicalName} in request {HttpRequest}.",
-                                parser.GetType().Name, canonicalName, _httpContext.Request.GetDisplayUrl());
+                                parser.GetType().Name, canonicalName, httpContext.Request.GetDisplayUrl());
                         }
                     }
                     else if (_logger.IsEnabled(LogLevel.Debug))
                     {
                         _logger.LogDebug("Tenant not matched by {Parser} in request {HttpRequest}.",
-                            parser.GetType().Name, _httpContext.Request.GetDisplayUrl());
+                            parser.GetType().Name, httpContext.Request.GetDisplayUrl());
                     }
                 }
                 _tenantLoaded = true;
