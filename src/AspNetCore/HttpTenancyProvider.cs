@@ -59,6 +59,15 @@ namespace MultiTenancyServer.Http
         /// Gets the tenant from the current HTTP request.
         /// </summary>
         /// <returns>The tenant the request is for, otherwise null if undeterministic or not found.</returns>
+        public TTenant GetCurrentTenant()
+        {
+            return GetCurrentTenantAsync().GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Gets the tenant from the current HTTP request asynchronously.
+        /// </summary>
+        /// <returns>A task that when completed results in the tenant the request is for, otherwise null if undeterministic or not found.</returns>
         public async Task<TTenant> GetCurrentTenantAsync(CancellationToken cancellationToken = default)
         {
             if (!_tenantLoaded)
