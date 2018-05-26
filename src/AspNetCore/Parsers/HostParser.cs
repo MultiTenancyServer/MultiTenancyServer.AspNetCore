@@ -9,7 +9,7 @@ namespace MultiTenancyServer.Http.Parsers
     /// Tenant canonical name can be set via a hostname 
     /// within the full domain name of a request.
     /// </summary>
-    public class HostParser : RequestParser
+    public class HostParser : RegexRequestParser
     {
         /// <summary>
         /// A regular expression to retreive the tenant canonical name from the full hostname (domain) of the request.

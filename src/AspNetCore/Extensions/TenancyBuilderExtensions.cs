@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using KodeAid;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using MultiTenancyServer.Configuration.DependencyInjection;
 using MultiTenancyServer.Http.Parsers;
@@ -146,6 +147,21 @@ namespace Microsoft.Extensions.DependencyInjection
             ArgCheck.NotNull(nameof(parsers), parsers);
             ArgCheck.NotNullOrEmpty(nameof(claimType), claimType);
             parsers.Add(new UserClaimParser() { ClaimType = claimType });
+            return parsers;
+        }
+
+        /// <summary>
+        /// Adds a <see cref="CustomParser"/> to the collection of parsers for detecting the current tenant's canonical name
+        /// from a custom function.
+        /// </summary>
+        /// <param name="parsers">Collection of parsers to add the <see cref="CustomParser"/> to.</param>
+        /// <param name="parser">Func that returns the tenant's canonical name from the current request.</param>
+        /// <returns><paramref name="parsers"/> for fluent API.</returns>
+        public static ICollection<IRequestParser> AddCustomParser(this ICollection<IRequestParser> parsers, Func<HttpContext, string> parser)
+        {
+            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(parser), parser);
+            parsers.Add(new CustomParser() { Parser = parser });
             return parsers;
         }
     }

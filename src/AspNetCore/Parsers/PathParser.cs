@@ -9,7 +9,7 @@ namespace MultiTenancyServer.Http.Parsers
     /// Tenant canonical name can be set via a path segment 
     /// within the URL path of a request.
     /// </summary>
-    public class PathParser : RequestParser
+    public class PathParser : RegexRequestParser
     {
         /// <summary>
         /// A regular expression to retreive the tenant canonical name from the full URL path of the request.
