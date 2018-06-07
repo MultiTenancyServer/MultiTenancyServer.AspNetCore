@@ -25,7 +25,7 @@ namespace MultiTenancyServer.Http.Parsers
         /// <returns>The matched segment of the path from the request.</returns>
         public override string ParseRequest(HttpContext httpContext)
         {
-            return FindMatch(httpContext.Request.Host.Host, PathPattern);
+            return FindMatch(httpContext.Request.Path, PathPattern);
         }
     }
 }
