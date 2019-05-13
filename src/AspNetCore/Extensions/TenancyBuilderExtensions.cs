@@ -2,13 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using KodeAid;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using MultiTenancyServer.Configuration.DependencyInjection;
 using MultiTenancyServer.Http.Parsers;
 
@@ -19,58 +16,67 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <summary>
         /// Helper functions for parsing the tenant from an HTTP request.
         /// </summary>
+        /// <param name="builder">Builder to add the <see cref="IRequestParser"/> to.</param>
         /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
         /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
-        public static TenancyBuilder<TTenant, TKey> AddRequestParsers<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Action<ICollection<IRequestParser>> parsers)
+        public static TenancyBuilder<TTenant, TKey> AddRequestParsers<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<IServiceProvider, IRequestParser> parserFactory)
             where TTenant : class
             where TKey : IEquatable<TKey>
         {
-            var p = new List<IRequestParser>();
-            parsers(p);
-            builder.Services.AddSingleton(p.AsEnumerable());
+            ArgCheck.NotNull(nameof(builder), builder);
+            builder.Services.AddScoped(parserFactory);
             return builder;
         }
 
         /// <summary>
         /// Adds a <see cref="DomainParser"/> to the collection of parsers for detecting the current tenant's canonical name by a custom domain name.
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="DomainParser"/> to.</param>
-        /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddDomainParser(this ICollection<IRequestParser> parsers)
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="DomainParser"/> to.</param>
+        /// <returns><paramref name="builder"/> for fluent API.</returns>
+        public static TenancyBuilder<TTenant, TKey> AddDomainParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
-            parsers.Add(new DomainParser());
-            return parsers;
+            ArgCheck.NotNull(nameof(builder), builder);
+            return builder.AddRequestParsers(sp => new DomainParser());
         }
 
         /// <summary>
         /// Adds a <see cref="HeaderParser"/> to the collection of parsers for detecting the current tenant's canonical name by an HTTP header.
         /// Eg. use "X-TENANT" for matching on X-TENANT = tenant1
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="HeaderParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="HeaderParser"/> to.</param>
         /// <param name="headerName">The HTTP header name which will contain the tenant's canonical name of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddHeaderParser(this ICollection<IRequestParser> parsers, string headerName)
+        public static TenancyBuilder<TTenant, TKey> AddHeaderParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string headerName)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(headerName), headerName);
-            parsers.Add(new HeaderParser() { HeaderName = headerName });
-            return parsers;
+            return builder.AddRequestParsers(sp => new HeaderParser() { HeaderName = headerName });
         }
 
         /// <summary>
         /// Adds a <see cref="HostParser"/> to the collection of parsers for detecting the current tenant's canonical name by a sub-domain host based on a parent domain.
         /// Eg: use ".tenants.multitenancyserver.io" to match on "tenant1.tenants.multitenancyserver.io"
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="HostParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="HostParser"/> to.</param>
         /// <param name="parentHostSuffix">The parent hostname suffix which will contain the tenant's canonical name as its only sub-domain hostname of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddSubdomainParser(this ICollection<IRequestParser> parsers, string parentHostSuffix)
+        public static TenancyBuilder<TTenant, TKey> AddSubdomainParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string parentHostSuffix)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(parentHostSuffix), parentHostSuffix);
-            parsers.AddHostnameParser($@"^([a-z0-9-]+){Regex.Escape(parentHostSuffix).Replace(@"\*", @"[a-z0-9-]+")}$");
-            return parsers;
+            return builder.AddHostnameParser($@"^([a-z0-9-]+){Regex.Escape(parentHostSuffix).Replace(@"\*", @"[a-z0-9-]+")}$");
         }
 
         /// <summary>
@@ -79,60 +85,72 @@ namespace Microsoft.Extensions.DependencyInjection
         /// matching on tenant1.eu.tenants.multitenancyserver.io where '.eu.' is an optional and dynamic two letter region code.
         /// The first group capture of a successful match is used, use anonymouse groups (?:) to avoid unwanted captures.
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="HostParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="HostParser"/> to.</param>
         /// <param name="hostPattern">A regular expression to retreive the tenant canonical name from the full hostname (domain) of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddHostnameParser(this ICollection<IRequestParser> parsers, string hostPattern)
+        public static TenancyBuilder<TTenant, TKey> AddHostnameParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string hostPattern)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(hostPattern), hostPattern);
-            parsers.Add(new HostParser() { HostPattern = hostPattern });
-            return parsers;
+            return builder.AddRequestParsers(sp => new HostParser() { HostPattern = hostPattern });
         }
 
         /// <summary>
         /// Adds a <see cref="PathParser"/> to the collection of parsers for detecting the current tenant's canonical name by a child path based on a parent path.
         /// Eg: use "/tenants/" for matching on multitenancyserver.io/tenants/tenant1
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="PathParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="PathParser"/> to.</param>
         /// <param name="parentPathPrefix">The parent path prefix which will contain the tenant's canonical name as its child path segment of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddChildPathParser(this ICollection<IRequestParser> parsers, string parentPathPrefix)
+        public static TenancyBuilder<TTenant, TKey> AddChildPathParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string parentPathPrefix)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(parentPathPrefix), parentPathPrefix);
-            parsers.AddPathParser($@"^{Regex.Escape(parentPathPrefix).Replace(@"\*", @"[a-z0-9-]+")}([a-z0-9._~!$&'()*+,;=:@%-]+)(?:$|[#/?].*$)");
-            return parsers;
+            return builder.AddPathParser($@"^{Regex.Escape(parentPathPrefix).Replace(@"\*", @"[a-z0-9-]+")}([a-z0-9._~!$&'()*+,;=:@%-]+)(?:$|[#/?].*$)");
         }
 
         /// <summary>
         /// Adds a <see cref="PathParser"/> to the collection of parsers for detecting the current tenant's canonical name by using a regular expression on the request's path.
         /// Eg: use "^/tenants/([a-z0-9]+)(?:[/]?)$" for matching on multitenancyserver.io/tenants/tenant1 or multitenancyserver.io/tenants/tenant1/
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="PathParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="PathParser"/> to.</param>
         /// <param name="pathPattern">A regular expression to retreive the tenant canonical name from the path of the request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddPathParser(this ICollection<IRequestParser> parsers, string pathPattern)
+        public static TenancyBuilder<TTenant, TKey> AddPathParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string pathPattern)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(pathPattern), pathPattern);
-            parsers.Add(new PathParser() { PathPattern = pathPattern });
-            return parsers;
+            return builder.AddRequestParsers(sp => new PathParser() { PathPattern = pathPattern });
         }
 
         /// <summary>
         /// Adds a <see cref="QueryParser"/> to the collection of parsers for detecting the current tenant's canonical name by a query string parameter.
         /// Eg: use "tenant" for matching on ?tenant=tenant1
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="QueryParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="QueryParser"/> to.</param>
         /// <param name="queryName">The query string parameter name of the tenant canonical name.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddQueryParser(this ICollection<IRequestParser> parsers, string queryName)
+        public static TenancyBuilder<TTenant, TKey> AddQueryParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string queryName)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(queryName), queryName);
-            parsers.Add(new QueryParser() { QueryName = queryName });
-            return parsers;
+            return builder.AddRequestParsers(sp => new QueryParser() { QueryName = queryName });
         }
 
         /// <summary>
@@ -140,42 +158,52 @@ namespace Microsoft.Extensions.DependencyInjection
         /// from a user claim on the authenticated user principal.
         /// Eg: claim type "http://schemas.microsoft.com/identity/claims/tenantid" or "tid".
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="UserClaimParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="UserClaimParser"/> to.</param>
         /// <param name="claimType">Claim type that contains the tenant canonical name as its value.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddClaimParser(this ICollection<IRequestParser> parsers, string claimType)
+        public static TenancyBuilder<TTenant, TKey> AddClaimParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, string claimType)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(claimType), claimType);
-            parsers.Add(new UserClaimParser() { ClaimType = claimType });
-            return parsers;
+            return builder.AddRequestParsers(sp => new UserClaimParser() { ClaimType = claimType });
         }
 
         /// <summary>
         /// Adds a <see cref="CustomParser"/> to the collection of parsers for detecting the current tenant's canonical name
         /// from a custom function.
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="CustomParser"/> to.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="CustomParser"/> to.</param>
         /// <param name="parser">Func that returns the tenant's canonical name from the current request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddCustomParser(this ICollection<IRequestParser> parsers, Func<HttpContext, string> parser)
+        public static TenancyBuilder<TTenant, TKey> AddCustomParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<HttpContext, string> parser)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            return parsers.AddCustomParser(httpContext => Task.FromResult(parser(httpContext)));
+            return builder.AddCustomParser(httpContext => Task.FromResult(parser(httpContext)));
         }
 
         /// <summary>
         /// Adds a <see cref="CustomParser"/> to the collection of parsers for detecting the current tenant's canonical name
         /// from a custom function.
         /// </summary>
-        /// <param name="parsers">Collection of parsers to add the <see cref="CustomParser"/> to.</param>
-        /// <param name="parser">Func that returns the tenant's canonical name from the current request.</param>
+        /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
+        /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
+        /// <param name="builder">Builder to add the <see cref="CustomParser"/> to.</param>
+        /// <param name="parser">Async func that returns the tenant's canonical name from the current request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static ICollection<IRequestParser> AddCustomParser(this ICollection<IRequestParser> parsers, Func<HttpContext, Task<string>> parser)
+        public static TenancyBuilder<TTenant, TKey> AddCustomParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<HttpContext, Task<string>> parser)
+            where TTenant : class
+            where TKey : IEquatable<TKey>
         {
-            ArgCheck.NotNull(nameof(parsers), parsers);
+            ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNull(nameof(parser), parser);
-            parsers.Add(new CustomParser() { Parser = parser });
-            return parsers;
+            return builder.AddRequestParsers(sp => new CustomParser() { Parser = parser });
         }
     }
 }
