@@ -72,7 +72,7 @@ namespace MultiTenancyServer.Http
 
                 foreach (var parser in _requestParsers)
                 {
-                    var canonicalName = await parser.ParseRequestAsync(httpContext).ConfigureAwait(false);
+                    var canonicalName = await parser.ParseRequestAsync(httpContext, cancellationToken).ConfigureAwait(false);
                     if (canonicalName != null)
                     {
                         var normalizedCanonicalName = _lookupNormalizer.Normalize(canonicalName);

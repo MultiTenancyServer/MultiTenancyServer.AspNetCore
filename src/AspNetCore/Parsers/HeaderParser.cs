@@ -3,6 +3,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
@@ -25,7 +26,7 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the value of the HTTP header named <see cref="HeaderName"/> from.</param>
         /// <returns>The value of the HTTP header named <see cref="HeaderName"/>.</returns>
-        public override Task<string> ParseRequestAsync(HttpContext httpContext)
+        public override Task<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(httpContext.Request.Headers.FirstOrDefault(h => string.Equals(h.Key, HeaderName, StringComparison.OrdinalIgnoreCase)).Value.FirstOrDefault());
         }

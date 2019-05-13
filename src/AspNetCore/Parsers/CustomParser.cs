@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
@@ -23,7 +24,7 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the tenant's canonical name from.</param>
         /// <returns>The tenant's canonical name from the request.</returns>
-        public override Task<string> ParseRequestAsync(HttpContext httpContext)
+        public override Task<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
         {
             return Parser(httpContext);
         }
