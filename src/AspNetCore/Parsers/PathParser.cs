@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Kris Penner. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
 
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace MultiTenancyServer.Http.Parsers
@@ -23,9 +24,9 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the segment of the path from.</param>
         /// <returns>The matched segment of the path from the request.</returns>
-        public override string ParseRequest(HttpContext httpContext)
+        public override Task<string> ParseRequestAsync(HttpContext httpContext)
         {
-            return FindMatch(httpContext.Request.Path, PathPattern);
+            return Task.FromResult(FindMatch(httpContext.Request.Path, PathPattern));
         }
     }
 }

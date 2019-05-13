@@ -4,6 +4,7 @@
 using System;
 using System.Linq;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace MultiTenancyServer.Http.Parsers
@@ -31,12 +32,12 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the user claim from.</param>
         /// <returns>The value of the matched claim from the current user of the request.</returns>
-        public override string ParseRequest(HttpContext httpContext)
+        public override Task<string> ParseRequestAsync(HttpContext httpContext)
         {
-            return httpContext?.User?.Claims?.OfType<Claim>()
+            return Task.FromResult(httpContext?.User?.Claims?.OfType<Claim>()
                 .Where(c => (Issuer == null || string.Equals(c.Issuer, Issuer, StringComparison.OrdinalIgnoreCase)) &&
-                    (ClaimType != null && string.Equals(c.Type, ClaimType, StringComparison.OrdinalIgnoreCase)))
-                .FirstOrDefault()?.Value;
+                            (ClaimType != null && string.Equals(c.Type, ClaimType, StringComparison.OrdinalIgnoreCase)))
+                .FirstOrDefault()?.Value);
         }
     }
 }

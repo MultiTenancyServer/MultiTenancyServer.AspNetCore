@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using KodeAid;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -158,6 +159,18 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="parser">Func that returns the tenant's canonical name from the current request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
         public static ICollection<IRequestParser> AddCustomParser(this ICollection<IRequestParser> parsers, Func<HttpContext, string> parser)
+        {
+            return parsers.AddCustomParser(httpContext => Task.FromResult(parser(httpContext)));
+        }
+
+        /// <summary>
+        /// Adds a <see cref="CustomParser"/> to the collection of parsers for detecting the current tenant's canonical name
+        /// from a custom function.
+        /// </summary>
+        /// <param name="parsers">Collection of parsers to add the <see cref="CustomParser"/> to.</param>
+        /// <param name="parser">Func that returns the tenant's canonical name from the current request.</param>
+        /// <returns><paramref name="parsers"/> for fluent API.</returns>
+        public static ICollection<IRequestParser> AddCustomParser(this ICollection<IRequestParser> parsers, Func<HttpContext, Task<string>> parser)
         {
             ArgCheck.NotNull(nameof(parsers), parsers);
             ArgCheck.NotNull(nameof(parser), parser);
