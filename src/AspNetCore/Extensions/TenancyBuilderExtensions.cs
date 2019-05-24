@@ -19,7 +19,7 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="builder">Builder to add the <see cref="IRequestParser"/> to.</param>
         /// <typeparam name="TTenant">The type representing a tenant.</typeparam>
         /// <typeparam name="TKey">The type of the primary key for a tenant.</typeparam>
-        public static TenancyBuilder<TTenant, TKey> AddRequestParsers<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<IServiceProvider, IRequestParser> parserFactory)
+        public static TenancyBuilder<TTenant, TKey> AddRequestParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<IServiceProvider, IRequestParser> parserFactory)
             where TTenant : class
             where TKey : IEquatable<TKey>
         {
@@ -40,7 +40,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
-            return builder.AddRequestParsers(sp => new DomainParser());
+            return builder.AddRequestParser(sp => new DomainParser());
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(headerName), headerName);
-            return builder.AddRequestParsers(sp => new HeaderParser() { HeaderName = headerName });
+            return builder.AddRequestParser(sp => new HeaderParser() { HeaderName = headerName });
         }
 
         /// <summary>
@@ -96,7 +96,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(hostPattern), hostPattern);
-            return builder.AddRequestParsers(sp => new HostParser() { HostPattern = hostPattern });
+            return builder.AddRequestParser(sp => new HostParser() { HostPattern = hostPattern });
         }
 
         /// <summary>
@@ -132,7 +132,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(pathPattern), pathPattern);
-            return builder.AddRequestParsers(sp => new PathParser() { PathPattern = pathPattern });
+            return builder.AddRequestParser(sp => new PathParser() { PathPattern = pathPattern });
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(queryName), queryName);
-            return builder.AddRequestParsers(sp => new QueryParser() { QueryName = queryName });
+            return builder.AddRequestParser(sp => new QueryParser() { QueryName = queryName });
         }
 
         /// <summary>
@@ -169,7 +169,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(claimType), claimType);
-            return builder.AddRequestParsers(sp => new UserClaimParser() { ClaimType = claimType });
+            return builder.AddRequestParser(sp => new UserClaimParser() { ClaimType = claimType });
         }
 
         /// <summary>
@@ -203,7 +203,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNull(nameof(parser), parser);
-            return builder.AddRequestParsers(sp => new CustomParser() { Parser = parser });
+            return builder.AddRequestParser(sp => new CustomParser() { Parser = parser });
         }
     }
 }
