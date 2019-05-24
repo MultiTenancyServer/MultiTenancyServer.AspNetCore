@@ -82,21 +82,21 @@ namespace MultiTenancyServer.Http
                             if (_logger.IsEnabled(LogLevel.Debug))
                             {
                                 var tenantId = await _tenantStore.GetTenantIdAsync(tenant, cancellationToken).ConfigureAwait(false);
-                                _logger.LogDebug("Tenant {TenantId} found by {Parser} for value {CanonicalName} in request {HttpRequest}.",
-                                    tenantId, parser.GetType().Name, canonicalName, httpContext.Request.GetDisplayUrl());
+                                _logger.LogDebug("Tenant {TenantId} matched canonical name {CanonicalName}, parsed by {RequestParser} for request {RequestUrl}.",
+                                    tenantId, canonicalName, parser.GetType().Name, httpContext.Request.GetDisplayUrl());
                             }
                             _tenant = tenant;
                             break;
                         }
                         else if (_logger.IsEnabled(LogLevel.Debug))
                         {
-                            _logger.LogDebug("Tenant not found by {Parser} for value {CanonicalName} in request {HttpRequest}.",
-                                parser.GetType().Name, canonicalName, httpContext.Request.GetDisplayUrl());
+                            _logger.LogDebug("No tenant matched canonical name {CanonicalName}, parsed by {RequestParser} for request {RequestUrl}.",
+                                canonicalName, parser.GetType().Name, httpContext.Request.GetDisplayUrl());
                         }
                     }
                     else if (_logger.IsEnabled(LogLevel.Debug))
                     {
-                        _logger.LogDebug("Tenant not matched by {Parser} in request {HttpRequest}.",
+                        _logger.LogDebug("Canonical name could not be parsed by {RequestParser} for request {RequestUrl}.",
                             parser.GetType().Name, httpContext.Request.GetDisplayUrl());
                     }
                 }
