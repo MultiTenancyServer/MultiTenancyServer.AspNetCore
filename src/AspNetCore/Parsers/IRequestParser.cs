@@ -9,6 +9,6 @@ namespace MultiTenancyServer.Http.Parsers
 {
     public interface IRequestParser
     {
-        Task<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default);
+        ValueTask<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default);
     }
 }

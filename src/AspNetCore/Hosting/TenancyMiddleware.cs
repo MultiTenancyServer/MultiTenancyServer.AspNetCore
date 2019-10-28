@@ -11,13 +11,15 @@ using MultiTenancyServer.Stores;
 
 namespace MultiTenancyServer.Hosting
 {
-    internal class TenancyMiddleware<TTenant> where TTenant : class
+    internal class TenancyMiddleware<TTenant>
+        where TTenant : class
     {
         public TenancyMiddleware(RequestDelegate next, TenancyOptions options, ILogger<TenancyMiddleware<TTenant>> logger)
         {
             ArgCheck.NotNull(nameof(next), next);
             ArgCheck.NotNull(nameof(options), options);
             ArgCheck.NotNull(nameof(logger), logger);
+
             _next = next;
             _options = options;
             _logger = logger;

@@ -25,9 +25,9 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the segment of the path from.</param>
         /// <returns>The matched segment of the path from the request.</returns>
-        public override Task<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
+        public override ValueTask<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(FindMatch(httpContext.Request.Path, PathPattern));
+            return new ValueTask<string>(FindMatch(httpContext.Request.Path, PathPattern));
         }
     }
 }

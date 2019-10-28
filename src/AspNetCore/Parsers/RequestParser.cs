@@ -14,6 +14,6 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the value from.</param>
         /// <returns>The parsed/matched value.</returns>
-        public abstract Task<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default);
+        public abstract ValueTask<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default);
     }
 }

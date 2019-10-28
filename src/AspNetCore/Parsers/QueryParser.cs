@@ -25,9 +25,9 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the value of the query string parameter named <see cref="QueryName"/> from.</param>
         /// <returns>The value of the query string parameter named <see cref="QueryName"/>.</returns>
-        public override Task<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
+        public override ValueTask<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(httpContext.Request.Query.FirstOrDefault(h => string.Equals(h.Key, QueryName, StringComparison.OrdinalIgnoreCase)).Value.FirstOrDefault());
+            return new ValueTask<string>(httpContext.Request.Query.FirstOrDefault(h => string.Equals(h.Key, QueryName, StringComparison.OrdinalIgnoreCase)).Value.FirstOrDefault());
         }
     }
 }

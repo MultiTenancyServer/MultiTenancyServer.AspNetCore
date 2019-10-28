@@ -30,9 +30,7 @@ namespace Microsoft.AspNetCore.Builder
 
         internal static IApplicationBuilder Validate<TTenant>(this IApplicationBuilder app) where TTenant : class
         {
-            var loggerFactory = app.ApplicationServices.GetService(typeof(ILoggerFactory)) as ILoggerFactory;
-            if (loggerFactory == null)
-                throw new ArgumentNullException(nameof(loggerFactory));
+            var loggerFactory = app.ApplicationServices.GetRequiredService<ILoggerFactory>();
 
             var logger = loggerFactory.CreateLogger($"{nameof(MultiTenancyServer)}.Startup");
 
@@ -46,8 +44,11 @@ namespace Microsoft.AspNetCore.Builder
                     "No storage mechanism for tenants specified. Use the 'AddInMemoryStore' extension method to register a development version.");
 
                 var options = serviceProvider.GetRequiredService<TenancyOptions>();
+
                 if (options == null)
+                {
                     throw new InvalidOperationException($"Options must be set.");
+                }
             }
 
             return app;
@@ -56,13 +57,18 @@ namespace Microsoft.AspNetCore.Builder
         internal static object TestService(IServiceProvider serviceProvider, Type service, ILogger logger, string message = null, bool throwOnError = true)
         {
             var appService = serviceProvider.GetService(service);
+
             if (appService == null)
             {
                 var error = message ?? $"Required service {service.FullName} is not registered in the DI container. Aborting startup.";
                 logger.LogCritical(error);
+
                 if (throwOnError)
+                {
                     throw new InvalidOperationException(error);
+                }
             }
+
             return appService;
         }
     }

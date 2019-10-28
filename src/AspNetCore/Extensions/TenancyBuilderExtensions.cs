@@ -24,6 +24,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
+
             builder.Services.AddScoped(parserFactory);
             return builder;
         }
@@ -40,6 +41,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
+
             return builder.AddRequestParser(sp => new DomainParser());
         }
 
@@ -58,6 +60,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(headerName), headerName);
+
             return builder.AddRequestParser(sp => new HeaderParser() { HeaderName = headerName });
         }
 
@@ -76,6 +79,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(parentHostSuffix), parentHostSuffix);
+
             return builder.AddHostnameParser($@"^([a-z0-9-]+){Regex.Escape(parentHostSuffix).Replace(@"\*", @"[a-z0-9-]+")}$");
         }
 
@@ -96,6 +100,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(hostPattern), hostPattern);
+
             return builder.AddRequestParser(sp => new HostParser() { HostPattern = hostPattern });
         }
 
@@ -114,6 +119,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(parentPathPrefix), parentPathPrefix);
+
             return builder.AddPathParser($@"^{Regex.Escape(parentPathPrefix).Replace(@"\*", @"[a-z0-9-]+")}([a-z0-9._~!$&'()*+,;=:@%-]+)(?:$|[#/?].*$)");
         }
 
@@ -132,6 +138,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(pathPattern), pathPattern);
+
             return builder.AddRequestParser(sp => new PathParser() { PathPattern = pathPattern });
         }
 
@@ -150,6 +157,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(queryName), queryName);
+
             return builder.AddRequestParser(sp => new QueryParser() { QueryName = queryName });
         }
 
@@ -169,6 +177,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNullOrEmpty(nameof(claimType), claimType);
+
             return builder.AddRequestParser(sp => new UserClaimParser() { ClaimType = claimType });
         }
 
@@ -185,7 +194,7 @@ namespace Microsoft.Extensions.DependencyInjection
             where TTenant : class
             where TKey : IEquatable<TKey>
         {
-            return builder.AddCustomParser(httpContext => Task.FromResult(parser(httpContext)));
+            return builder.AddCustomParser(httpContext => new ValueTask<string>(parser(httpContext)));
         }
 
         /// <summary>
@@ -197,12 +206,13 @@ namespace Microsoft.Extensions.DependencyInjection
         /// <param name="builder">Builder to add the <see cref="CustomParser"/> to.</param>
         /// <param name="parser">Async func that returns the tenant's canonical name from the current request.</param>
         /// <returns><paramref name="parsers"/> for fluent API.</returns>
-        public static TenancyBuilder<TTenant, TKey> AddCustomParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<HttpContext, Task<string>> parser)
+        public static TenancyBuilder<TTenant, TKey> AddCustomParser<TTenant, TKey>(this TenancyBuilder<TTenant, TKey> builder, Func<HttpContext, ValueTask<string>> parser)
             where TTenant : class
             where TKey : IEquatable<TKey>
         {
             ArgCheck.NotNull(nameof(builder), builder);
             ArgCheck.NotNull(nameof(parser), parser);
+
             return builder.AddRequestParser(sp => new CustomParser() { Parser = parser });
         }
     }

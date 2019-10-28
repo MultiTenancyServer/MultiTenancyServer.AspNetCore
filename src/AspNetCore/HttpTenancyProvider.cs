@@ -17,7 +17,8 @@ namespace MultiTenancyServer.Http
     /// <summary>
     /// Tenancy provider for HTTP requests.
     /// </summary>
-    public class HttpTenancyProvider<TTenant> : ITenancyProvider<TTenant> where TTenant : class
+    public class HttpTenancyProvider<TTenant> : ITenancyProvider<TTenant>
+        where TTenant : class
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpTenancyProvider"/> class.
@@ -59,11 +60,12 @@ namespace MultiTenancyServer.Http
         /// Gets the tenant from the current HTTP request asynchronously.
         /// </summary>
         /// <returns>A task that when completed results in the tenant the request is for, otherwise null if undeterministic or not found.</returns>
-        public async Task<TTenant> GetCurrentTenantAsync(CancellationToken cancellationToken = default)
+        public async ValueTask<TTenant> GetCurrentTenantAsync(CancellationToken cancellationToken = default)
         {
             if (!_tenantLoaded)
             {
                 var httpContext = _httpContextAccessor.HttpContext;
+
                 if (httpContext == null)
                 {
                     _logger.LogError($"{nameof(IHttpContextAccessor)}.{nameof(IHttpContextAccessor.HttpContext)} is not available yet, it may be too early in the request pipeline to access it.");
@@ -73,10 +75,12 @@ namespace MultiTenancyServer.Http
                 foreach (var parser in _requestParsers)
                 {
                     var canonicalName = await parser.ParseRequestAsync(httpContext, cancellationToken).ConfigureAwait(false);
+
                     if (canonicalName != null)
                     {
                         var normalizedCanonicalName = _lookupNormalizer.Normalize(canonicalName);
                         var tenant = await _tenantStore.FindByCanonicalNameAsync(normalizedCanonicalName, cancellationToken).ConfigureAwait(false);
+
                         if (tenant != null)
                         {
                             if (_logger.IsEnabled(LogLevel.Debug))
@@ -85,6 +89,7 @@ namespace MultiTenancyServer.Http
                                 _logger.LogDebug("Tenant {TenantId} matched canonical name {CanonicalName}, parsed by {RequestParser} for request {RequestUrl}.",
                                     tenantId, canonicalName, parser.GetType().Name, httpContext.Request.GetDisplayUrl());
                             }
+
                             _tenant = tenant;
                             break;
                         }
@@ -100,6 +105,7 @@ namespace MultiTenancyServer.Http
                             parser.GetType().Name, httpContext.Request.GetDisplayUrl());
                     }
                 }
+
                 _tenantLoaded = true;
             }
 

@@ -17,9 +17,9 @@ namespace MultiTenancyServer.Http.Parsers
         /// </summary>
         /// <param name="httpContext">The request to retrieve the full domain hostname from.</param>
         /// <returns>The value of the full domain hostname.</returns>
-        public override Task<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
+        public override ValueTask<string> ParseRequestAsync(HttpContext httpContext, CancellationToken cancellationToken = default)
         {
-            return Task.FromResult(httpContext.Request.Host.Host);
+            return new ValueTask<string>(httpContext.Request.Host.Host);
         }
     }
 }
