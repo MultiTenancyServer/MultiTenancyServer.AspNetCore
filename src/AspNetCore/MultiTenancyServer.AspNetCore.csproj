@@ -11,7 +11,7 @@
     </ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="MultiTenancyServer" Version="2.0.0-alpha1" />
+		<PackageReference Include="MultiTenancyServer" Version="2.0.0-beta1" />
 	</ItemGroup>
 
 </Project>
